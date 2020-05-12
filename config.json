@@ -1,48 +1,63 @@
 {
-    "name": "Mnist_LeNet",
+    "name": "Hdr3DGan",
     "n_gpu": 1,
 
-    "arch": {
-        "type": "MnistModel",
+    "arch_generator": {
+        "type": "Generator",
+        "args": {}
+    },
+    "arch_discriminator": {
+        "type": "Discriminator",
         "args": {}
     },
     "data_loader": {
-        "type": "MnistDataLoader",
+        "type": "HdrDataLoader",
         "args":{
             "data_dir": "data/",
-            "batch_size": 128,
+            "batch_size": 8,
             "shuffle": true,
             "validation_split": 0.1,
-            "num_workers": 2
+            "num_workers": 1
         }
     },
-    "optimizer": {
+    "optimizer_g": {
         "type": "Adam",
         "args":{
-            "lr": 0.001,
+            "lr": 0.005,
             "weight_decay": 0,
             "amsgrad": true
         }
     },
-    "loss": "nll_loss",
+    "optimizer_d": {
+        "type": "Adam",
+        "args":{
+            "lr": 0.005,
+            "weight_decay": 0,
+            "amsgrad": true
+        }
+    },
+    "generator_loss": "l1_loss",
+    "discriminator_loss":"cross_entropy_loss",
+    "adversarial_loss":"cross_entropy_adversarial",
     "metrics": [
-        "accuracy", "top_k_acc"
+        "psnr"
     ],
     "lr_scheduler": {
         "type": "StepLR",
         "args": {
-            "step_size": 50,
+            "step_size": 3,
             "gamma": 0.1
         }
     },
     "trainer": {
-        "epochs": 100,
+        "epochs": 10,
+        "pre_training_iterations": 50,
 
         "save_dir": "saved/",
         "save_period": 1,
         "verbosity": 2,
         
-        "monitor": "min val_loss",
+        "monitor": "max val_psnr",
         "early_stop": 10,
 
         "tensorboard": true
