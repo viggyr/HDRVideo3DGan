@@ -1,0 +1,3 @@
+# HDRVideo3DGan
+### An efficient technique for generating HDR videos with low cost. 
+Detailed explaination coming soon....
