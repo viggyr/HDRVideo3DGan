@@ -14,7 +14,7 @@ def main(config):
     # setup data_loader instances
     data_loader = getattr(module_data, config['data_loader']['type'])(
         config['data_loader']['args']['data_dir'],
-        batch_size=512,
+        batch_size=8,
         shuffle=False,
         validation_split=0.0,
         training=False,
@@ -22,32 +22,32 @@ def main(config):
     )
 
     # build model architecture
-    model = config.init_obj('arch', module_arch)
+    model_g = config.init_obj('arch_generator', module_arch)
     logger.info(model)
 
     # get function handles of loss and metrics
-    loss_fn = getattr(module_loss, config['loss'])
+    loss_fn = getattr(module_loss, config['generator_loss'])
     metric_fns = [getattr(module_metric, met) for met in config['metrics']]
 
     logger.info('Loading checkpoint: {} ...'.format(config.resume))
     checkpoint = torch.load(config.resume)
-    state_dict = checkpoint['state_dict']
+    state_dict = checkpoint['state_dict_g']
     if config['n_gpu'] > 1:
-        model = torch.nn.DataParallel(model)
-    model.load_state_dict(state_dict)
+        model_g = torch.nn.DataParallel(model_g)
+    model_g.load_state_dict(state_dict)
 
     # prepare model for testing
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = model.to(device)
-    model.eval()
+    model_g = model_g.to(device)
+    model_g.eval()
 
     total_loss = 0.0
     total_metrics = torch.zeros(len(metric_fns))
 
     with torch.no_grad():
-        for i, (data, target) in enumerate(tqdm(data_loader)):
-            data, target = data.to(device), target.to(device)
-            output = model(data)
+        for i, (im1,im2, im3, hdr) in enumerate(tqdm(data_loader)):
+            im1, im2, im3, hdr = im1.to(device), im2.to(device), im3.to(device), hdr.to(device)
+            output = model_g((im1, im2, im3))
 
             #
             # save sample images, or do something with output here
